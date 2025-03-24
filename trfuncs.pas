@@ -8773,9 +8773,10 @@ begin
   for i := 1 to 31 do
     VTM.Samples[i] := nil;
   MaxSample := 0;
+  for i := 0 to 2 do
+    Sam[i] := -1;
   for i := 0 to 14 do
   begin
-    Sam[i] := -1;
     for j := 0 to 15 do
       PSMSamples[i, j] := 0;
   end;
