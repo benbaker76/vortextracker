@@ -4192,8 +4192,8 @@ begin
     if IsSample[i] then
     begin
       j := WordPtr(@STP.Index[STP.STP_SamplesPointer + (i - 1) * 2])^;
-      if (STP.Index[j] > MaxSamLen-1) or (STP.Index[j+1] > MaxSamLen) then
-        Continue;
+      //if (STP.Index[j] > MaxSamLen-1) or (STP.Index[j+1] > MaxSamLen) then
+      //  Continue;
 
       New(VTM.Samples[i]);
       VTM.Samples[i].Loop := STP.Index[j]; Inc(j);
@@ -4470,7 +4470,7 @@ var
       Dec(ix21[ChNum]);
       if b7ix0[ChNum] then
         Call_LC191;
-      if (PrevOrn[ChNum] > 0) and (Orn2Sam[PrevOrn[ChNum]] = 0) then
+      if (PrevOrn[ChNum] > 0) and (PrevOrn[ChNum] <> 255) and (Orn2Sam[PrevOrn[ChNum]] = 0) then
         Orn2Sam[PrevOrn[ChNum]] := PrevSamp[ChNum];
       exit
     end;
@@ -4539,7 +4539,7 @@ var
           end
       end
     until False;
-    if (PrevOrn[ChNum] > 0) and (Orn2Sam[PrevOrn[ChNum]] = 0) then
+    if (PrevOrn[ChNum] > 0) and (PrevOrn[ChNum] <> 255) and (Orn2Sam[PrevOrn[ChNum]] = 0) then
       Orn2Sam[PrevOrn[ChNum]] := PrevSamp[ChNum]
   end;
 
