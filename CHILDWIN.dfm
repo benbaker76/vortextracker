@@ -1961,4 +1961,11 @@ object MDIChild: TMDIChild
       OnClick = FileBrowserSetFavorite
     end
   end
+  object ExportYMDlg: TSaveDialog
+    DefaultExt = 'ym'
+    Filter = 'YM|*.ym'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofShareAware, ofEnableSizing]
+    Left = 352
+    Top = 672
+  end
 end

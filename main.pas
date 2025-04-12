@@ -36,7 +36,7 @@ const
   AppName = 'Vortex Tracker';
   VersionString = '2.6';
   IsBeta = ' dev';
-  BetaNumber = ' 22';
+  BetaNumber = ' 23';
 
   VersionFullString = VersionString + IsBeta + BetaNumber;
 
@@ -290,6 +290,7 @@ type
     JmpLineStartAct: TAction;
     JmpLineEndAct: TAction;
     ExportPSG: TMenuItem;
+	ExportYM: TMenuItem;
     MIDITimer: TTimer;
     PositionColorL1: TMenuItem;
     PositionColorL2: TMenuItem;
@@ -319,6 +320,7 @@ type
     PackPatternAct: TAction;
     PackPattern1: TMenuItem;
     ExportPSGAct: TAction;
+	ExportYMAct: TAction;
     ToolButton6: TToolButton;
     ToolButton7: TToolButton;
     ToolButton8: TToolButton;
@@ -594,6 +596,8 @@ type
     procedure PackPatternActExecute(Sender: TObject);
     procedure ExportPSGActExecute(Sender: TObject);
     procedure ExportPSGActUpdate(Sender: TObject);
+    procedure ExportYMActExecute(Sender: TObject);
+    procedure ExportYMActUpdate(Sender: TObject);
     procedure StatusBarDblClick(Sender: TObject);
 
   private
@@ -7100,6 +7104,7 @@ begin
   Tracksmanager1.Enabled := False;
   Globaltransposition1.Enabled := False;
   ExportPSG.Enabled := False;
+  ExportYM.Enabled := False;
   PlayingWindow[1].PageControl1.Enabled := False;
   if PlayingWindow[2] <> nil then PlayingWindow[2].PageControl1.Enabled := False;
 end;
@@ -7121,6 +7126,7 @@ begin
   Globaltransposition1.Enabled := True;
   PlayingWindow[1].PageControl1.Enabled := True;
   ExportPSG.Enabled := True;
+  ExportYM.Enabled := True;
   if PlayingWindow[2] <> nil then PlayingWindow[2].PageControl1.Enabled := True;
   RestoreControls;
 end;
@@ -7252,6 +7258,29 @@ begin
   Exports1.Enabled := ExportPSGAct.Enabled;
 end;
 
+
+procedure TMainForm.ExportYMActExecute(Sender: TObject);
+begin
+  if TMDIChild(ActiveMDIChild) = nil then Exit;
+  if MDIChildCount = 0 then Exit;
+  if ExportStarted then Exit;
+  if NoPatterns then Exit;
+
+  // Stop playing all
+  if IsPlaying then
+  begin
+    StopPlaying;
+    RestoreControls;
+  end;
+
+  TMDIChild(ActiveMDIChild).ExportYM;
+end;
+
+procedure TMainForm.ExportYMActUpdate(Sender: TObject);
+begin
+  ExportYMAct.Enabled := (MDIChildCount > 0) and not ExportStarted;
+  Exports1.Enabled := ExportYMAct.Enabled;
+end;
 
 
 procedure TMainForm.StatusBarDblClick(Sender: TObject);

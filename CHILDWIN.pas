@@ -543,6 +543,7 @@ type
     SpeedButton15: TSpeedButton;
     ClearSample: TButton;
     ExportPSGDlg: TSaveDialog;
+	ExportYMDlg: TSaveDialog;
     NextPrevSampleBox: TGroupBox;
     PrevSampleBtn: TButton;
     NextSampleBtn: TButton;
@@ -938,7 +939,9 @@ type
       Shift: TShiftState);
     procedure EnvelopeAsNoteOptClick(Sender: TObject);
     procedure SavePSGRegisterDump(FileName: string; VTMP: PModule; Chip: byte);
+	procedure SaveYMRegisterDump(FileName: string; VTMP: PModule; Chip: byte);
     procedure ExportPSG;
+	procedure ExportYM;
     procedure StopAndRestoreControls;
     procedure SamplePreview;
     procedure OrnamentPreview;
@@ -21245,6 +21248,112 @@ begin
 end;
 
 
+procedure TMDIChild.SaveYMRegisterDump(FileName: string; VTMP: PModule; Chip: byte);
+var
+  i: Integer;
+  f: file of byte;
+  iReg, fByte: byte;
+  fWord: word;
+  currRegs: array[0..13] of byte;
+  dw: cardinal;
+
+
+  procedure write_ym_header;
+  var h: string[16];
+  begin
+
+    dw:=0;
+
+    h:='YM6!LeOnArD!';
+    blockwrite(f, h[1], length(h));
+
+    blockwrite(f, dw, 4);   // nframes
+
+    blockwrite(f, dw, 4);  // attributes, not "interleaved"
+    blockwrite(f, dw, 2);  // zero digidrums
+
+    dw:=1773400;           // master clock (ZX SPECTRUM)
+    fByte:=dw shr 24; blockwrite(f, fByte, 1);
+    fByte:=dw shr 16; blockwrite(f, fByte, 1);
+    fByte:=dw shr 8;  blockwrite(f, fByte, 1);
+    fByte:=dw;        blockwrite(f, fByte, 1);
+
+    fByte:=0; blockwrite(f, fByte, 1); // playrate
+    fByte:=50; blockwrite(f, fByte, 1);
+
+    dw:=0;
+    blockwrite(f, dw, 4);  // loop frame
+    blockwrite(f, dw, 2);  // skip
+
+    h:='name'#0;
+    blockwrite(f, h[1], 5);
+
+    h:='author'#0;
+    blockwrite(f, h[1], 7);
+
+    h:='comment'#0;
+    blockwrite(f, h[1], 8);
+  end;
+
+
+begin
+  AssignFile(f, FileName);
+  Rewrite(f);
+
+  // zerofill rurrent registers
+  for iReg := 0 to 13 do begin
+    currRegs[iReg] := 0;
+  end;
+
+  PlayMode := PMPlayModule;
+  if IsPlaying then StopPlaying;
+
+  MainForm.DisableControlsForExport;
+  InitForAllTypes(True);
+
+  // Init pointer, position, delay
+  Module_SetPointer(VTMP, Chip);
+  Module_SetDelay(VTMP.Initial_Delay);
+  Module_SetCurrentPosition(0);
+
+  write_ym_header;
+
+  ExportLoops := 1;
+  LoopAllowed := False;
+  ExportStarted  := True;
+  ExportFinished := False;
+
+  dw := 0;
+  fWord:=0;
+
+  while (Module_PlayCurrentLine() <> 3) do begin
+
+    for iReg := 0 to 13 do
+      currRegs[iReg] := SoundChip[Chip].AYRegisters.Index[iReg];
+
+    BlockWrite(f, currRegs, sizeof(currRegs));
+
+    BlockWrite(f, fWord, 2);  // 14..15
+
+    inc(dw);
+  end;
+
+
+  Seek(f, 12);
+
+  fByte:=dw shr 24; blockwrite(f, fByte, 1);
+  fByte:=dw shr 16; blockwrite(f, fByte, 1);
+  fByte:=dw shr 8;  blockwrite(f, fByte, 1);
+  fByte:=dw;        blockwrite(f, fByte, 1);
+
+  CloseFile(f);
+
+  ExportStarted  := False;
+  ExportFinished := True;
+  MainForm.EnableControlsForExport;
+
+end;
+
 
 procedure TMDIChild.ExportPSG;
 var
@@ -21269,6 +21378,32 @@ begin
 
   end;
 
+
+end;
+
+
+procedure TMDIChild.ExportYM;
+var
+  Chip1Name, Chip2Name: String;
+
+begin
+
+  PrepareExportDialog(ExportYMDlg, '.ym');
+  if ExportYMDlg.Execute then
+  begin
+    ExportYMDlg.InitialDir := ExtractFilePath(ExportYMDlg.FileName);
+
+    if TSWindow <> nil then
+    begin
+      Chip1Name := StringReplace(ExportYMDlg.FileName, '.ym', '.1.ym', [rfReplaceAll, rfIgnoreCase]);
+      Chip2Name := StringReplace(ExportYMDlg.FileName, '.ym', '.2.ym', [rfReplaceAll, rfIgnoreCase]);
+      SaveYMRegisterDump(Chip1Name, VTMP, 1);
+      SaveYMRegisterDump(Chip2Name, TSWindow.VTMP, 2);
+    end
+    else
+      SaveYMRegisterDump(ExportYMDlg.FileName, VTMP, 1);
+
+  end;
 
 end;
 

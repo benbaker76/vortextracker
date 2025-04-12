@@ -283,6 +283,9 @@ object MainForm: TMainForm
       object ExportPSG: TMenuItem
         Action = ExportPSGAct
       end
+      object ExportYM: TMenuItem
+        Action = ExportYMAct
+      end
       object Exports1: TMenuItem
         Caption = 'Exports'
         object SaveSNDHMenu: TMenuItem
@@ -908,6 +911,12 @@ object MainForm: TMainForm
       ImageIndex = 36
       OnExecute = GlobalTranspositionClick
       OnUpdate = GlobalTranspositionUpdate
+    end
+    object ExportYMAct: TAction
+      Category = 'File'
+      Caption = 'Export YM...'
+      OnExecute = ExportYMActExecute
+      OnUpdate = ExportYMActUpdate
     end
   end
   object ImageList1: TImageList
